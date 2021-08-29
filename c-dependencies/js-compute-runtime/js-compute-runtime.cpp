@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdlib>
+#include <vector>
 #include <iostream>
 #include <chrono>
 #ifdef MEM_STATS
@@ -14,8 +15,11 @@
 
 #include "js/CompilationAndEvaluation.h"
 #include "js/ContextOptions.h"
+#include "js/Conversions.h"
 #include "js/Initialization.h"
+#include "js/JSON.h"
 #include "js/SourceText.h"
+#include "js/Value.h"
 
 #pragma clang diagnostic pop
 
@@ -38,6 +42,7 @@ using JS::RootedString;
 using JS::HandleValue;
 using JS::HandleValueArray;
 using JS::HandleObject;
+using JS::HandleString;
 using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
@@ -77,7 +82,7 @@ JSContext* CONTEXT = nullptr;
 JS::PersistentRootedObject GLOBAL;
 JS::PersistentRootedObject unhandledRejectedPromises;
 
-static JS::PersistentRootedObjectVector* FETCH_HANDLERS;
+static JS::PersistentRootedObjectVector* EVENT_HANDLERS;
 
 void gc_callback(JSContext* cx, JSGCStatus status, JS::GCReason reason, void* data) {
   if (debug_logging_enabled())
@@ -148,7 +153,6 @@ bool init_js() {
 
   JS::SetPromiseRejectionTrackerCallback(cx, rejection_tracker);
 
-
   CONTEXT = cx;
   GLOBAL.init(cx, global);
   unhandledRejectedPromises.init(cx, JS::NewSetObject(cx));
@@ -212,11 +216,6 @@ static void abort(JSContext* cx, const char* description) {
             "Additionally, some promises were rejected, but the rejection never handled:\n");
     report_unhandled_promise_rejections(cx);
   }
-
-  // Respond with status `500` if no response was ever sent.
-  HandleObject fetch_event = FetchEvent::instance();
-  if (INITIALIZED && !FetchEvent::response_started(fetch_event))
-    FetchEvent::respondWithError(cx, fetch_event);
 
   fflush(stderr);
   exit(1);
@@ -289,30 +288,6 @@ bool eval_stdin(JSContext* cx, MutableHandleValue result) {
   return true;
 }
 
-static bool addEventListener(JSContext* cx, unsigned argc, Value* vp) {
-  JS::CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "addEventListener", 2))
-    return false;
-
-  size_t event_len;
-  JS::UniqueChars event_chars = encode(cx, args[0], &event_len);
-  if (!event_chars) return false;
-
-  if (strncmp(event_chars.get(), "fetch", event_len)) {
-    fprintf(stderr, "Error: addEventListener only supports the event 'fetch' right now, "
-            "but got event '%s'\n", event_chars.get());
-    exit(1);
-  }
-
-  RootedValue val(cx, args[1]);
-  if (!val.isObject() || !JS_ObjectIsFunction(&val.toObject())) {
-    fprintf(stderr, "Error: addEventListener: Argument 2 is not a function.\n");
-    exit(1);
-  }
-
-  return FETCH_HANDLERS->append(&val.toObject());
-}
-
 void init() {
     assert(!INITIALIZED);
 
@@ -322,33 +297,24 @@ void init() {
   JSContext* cx = CONTEXT;
   RootedObject global(cx, GLOBAL);
   JSAutoRealm ar(cx, global);
-  FETCH_HANDLERS = new JS::PersistentRootedObjectVector(cx);
+  EVENT_HANDLERS = new JS::PersistentRootedObjectVector(cx);
 
-  define_fastly_sys(cx, global);
-  if (!JS_DefineFunction(cx, global, "addEventListener", addEventListener, 2, 0))
-    exit(1);
+  define_compute_sys(cx, global);
 
   RootedValue result(cx);
   if (!eval_stdin(cx, &result))
     abort(cx, "evaluating JS");
 
-  if (!FetchEvent::create(cx))
-    exit(1);
-
-  if (FETCH_HANDLERS->length() == 0) {
+  if (EVENT_HANDLERS->length() == 0) {
     RootedValue val(cx);
-    if (!JS_GetProperty(cx, global, "onfetch", &val) ||
+    if (!JS_GetProperty(cx, global, "main", &val) ||
         !val.isObject() || !JS_ObjectIsFunction(&val.toObject()))
     {
-      // The error message only mentions `addEventListener`, even though we also support
-      // an `onfetch` top-level function as an alternative. We're treating the latter
-      // as undocumented functionality for the time being.
-      fprintf(stderr, "Error: no `fetch` event handler registered during initialization. "
-                      "Make sure to call `addEventListener('fetch', your_handler)`.\n");
+      fprintf(stderr, "Error: no `main` event handler registered during initialization.\n");
       exit(1);
     }
-    if (!FETCH_HANDLERS->append(&val.toObject()))
-      abort(cx, "Adding onfetch as a fetch event handler");
+    if (!EVENT_HANDLERS->append(&val.toObject()))
+      abort(cx, "Adding main as a event handler");
   }
 
   fflush(stdout);
@@ -364,28 +330,24 @@ void init() {
 
 WIZER_INIT(init);
 
-static void dispatch_fetch_event(JSContext* cx, HandleObject event, double* total_compute) {
+static void dispatch_event(JSContext* cx, HandleString event, double* total_compute) {
   auto pre_handler = system_clock::now();
 
-  FetchEvent::start_dispatching(event);
-
   RootedValue result(cx);
-  RootedValue event_val(cx, JS::ObjectValue(*event));
+  RootedValue event_val(cx);
+  event_val.setString(event);
   HandleValueArray argsv = HandleValueArray(event_val);
   RootedValue handler(cx);
   RootedValue rval(cx);
 
-  for (size_t i = 0; i < FETCH_HANDLERS->length(); i++) {
-    handler.setObject(*(*FETCH_HANDLERS)[i]);
-    if (!JS_CallFunctionValue(cx, GLOBAL, handler, argsv, &rval)) {
-      DumpPendingException(cx, "dispatching FetchEvent\n");
-      JS_ClearPendingException(cx);
-    }
-    if (FetchEvent::state(event) != FetchEvent::State::unhandled)
-      break;
-  }
+  if (debug_logging_enabled())
+    printf("Preparing event handler (%zu)...\n", EVENT_HANDLERS->length());
 
-  FetchEvent::stop_dispatching(event);
+  handler.setObject(*(*EVENT_HANDLERS)[0]);
+  if (!JS_CallFunctionValue(cx, GLOBAL, handler, argsv, &rval)) {
+    DumpPendingException(cx, "dispatching event\n");
+    JS_ClearPendingException(cx);
+  }
 
   double diff = duration_cast<microseconds>(system_clock::now() - pre_handler).count();
   *total_compute += diff;
@@ -414,17 +376,11 @@ static void process_pending_jobs(JSContext* cx, double* total_compute) {
 }
 
 static void wait_for_backends(JSContext* cx, double* total_compute) {
-  if (!has_pending_requests())
-    return;
-
   auto pre_requests = system_clock::now();
   if (debug_logging_enabled()) {
     printf("Waiting for backends ...\n");
     fflush(stdout);
   }
-
-  if (!process_network_io(cx))
-    abort(cx, "processing network requests");
 
   double diff = duration_cast<microseconds>(system_clock::now() - pre_requests).count();
   if (debug_logging_enabled())
@@ -435,8 +391,6 @@ int main(int argc, const char *argv[]) {
   if (!INITIALIZED) {
     init();
     assert(INITIALIZED);
-      // fprintf(stderr, "js.wasm must be initialized with a JS source file using Wizer\n");
-      // exit(-1);
   }
 
   double total_compute = 0;
@@ -444,9 +398,12 @@ int main(int argc, const char *argv[]) {
 
   __wasilibc_initialize_environ();
 
+  std::vector<std::string> args(argv, argv + argc);
+  std::string input = args.at(1);
+
   if (debug_logging_enabled()) {
-    printf("Running JS handleRequest function for C@E service version %s\n",
-           getenv("FASTLY_SERVICE_VERSION"));
+    printf("Running JS handleRequest function for service\n");
+    printf("[0] %s [1} %s\n", args[0].c_str(), input.c_str());
     fflush(stdout);
   }
 
@@ -454,9 +411,9 @@ int main(int argc, const char *argv[]) {
   JSAutoRealm ar(cx, GLOBAL);
   js::ResetMathRandomSeed(cx);
 
-  HandleObject fetch_event = FetchEvent::instance();
+  RootedString event(cx, JS_NewStringCopyN(cx, input.c_str(), input.length()));
 
-  dispatch_fetch_event(cx, fetch_event, &total_compute);
+  dispatch_event(cx, event, &total_compute);
 
   // Loop until no more resolved promises or backend requests are pending.
   if (debug_logging_enabled()) {
@@ -468,27 +425,12 @@ int main(int argc, const char *argv[]) {
     // First, drain the promise reactions queue.
     process_pending_jobs(cx, &total_compute);
 
-    // Then, check if the fetch event is still active, i.e. had pending promises
-    // added to it using `respondWith` or `waitUntil`.
-    if (!FetchEvent::is_active(fetch_event))
-      break;
-
     // Process async tasks.
     wait_for_backends(cx, &total_compute);
-  } while (js::HasJobsPending(cx) || has_pending_requests());
-
-  if (debug_logging_enabled() && has_pending_requests()) {
-    fprintf(stderr, "Service terminated with async tasks pending. "
-                    "Use FetchEvent#waitUntil to extend the service's lifetime if needed.\n");
-  }
+  } while (js::HasJobsPending(cx));
 
   if (JS::SetSize(cx, unhandledRejectedPromises) > 0) {
     report_unhandled_promise_rejections(cx);
-
-    // Respond with status `500` if any promise rejections were left unhandled
-    // and no response was ever sent.
-    if (!FetchEvent::response_started(fetch_event))
-      FetchEvent::respondWithError(cx, fetch_event);
   }
 
   auto end = system_clock::now();
