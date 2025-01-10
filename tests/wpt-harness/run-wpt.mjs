@@ -1,8 +1,7 @@
-import { stdin, stdout, stderr } from "process";
 import { argv } from 'process';
 import { execFile } from "child_process";
 import { on, once } from "events";
-import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, stat } from "fs";
+import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from "fs";
 import http from "http";
 import path from "path";
 
@@ -216,7 +215,7 @@ async function run() {
 
     if (config.tests.updateExpectations) {
       console.log(`Expectations updated: ${expectationsUpdated}`);
-    } else if (stats.unexpectedFail + stats.unexpectedPass != 0 || unexpectedFailure) {
+    } else if (stats.unexpectedFail + stats.unexpectedPass + stats.missing != 0 || unexpectedFailure) {
       process.exitCode = 1;
     }
   }
@@ -454,7 +453,8 @@ async function runTests(testPaths, viceroy, resultCallback, errorCallback) {
       await resultCallback(path, results, stats);
     } catch (e) {
       if (!results) {
-        e = new Error(`Parsing test results as JSON failed. Output was:\n  ${body}`);
+        e = new Error(`\nMISSING TEST RESULTS: ${path}\nParsing test results as JSON failed. Output was:\n  ${body}`);
+        totalStats.missing += Math.max(Object.keys(expectations).length, 1);
       }
       if (config.logLevel >= LogLevel.Verbose) {
         console.log(`Error running file ${path}: ${e.message}, stack:\n${e.stack}`);

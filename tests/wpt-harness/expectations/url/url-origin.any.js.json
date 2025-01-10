@@ -140,6 +140,12 @@
   "Origin parsing: <http:\\\\a\\b:c\\d@foo.com\\> against <http://example.org/foo/bar>": {
     "status": "PASS"
   },
+  "Origin parsing: <http://a:b@c\\> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <ws://a@b\\c> without base": {
+    "status": "PASS"
+  },
   "Origin parsing: <foo:/> against <http://example.org/foo/bar>": {
     "status": "PASS"
   },
@@ -785,9 +791,6 @@
   "Origin parsing: <wow:￿> without base": {
     "status": "PASS"
   },
-  "Origin parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> without base": {
-    "status": "PASS"
-  },
   "Origin parsing: <http://!\"$&'()*+,-.;=_`{}~/> without base": {
     "status": "PASS"
   },
@@ -959,9 +962,6 @@
   "Origin parsing: <blob:about:blank> without base": {
     "status": "PASS"
   },
-  "Origin parsing: <blob:file://host/path> without base": {
-    "status": "PASS"
-  },
   "Origin parsing: <blob:ftp://host/path> without base": {
     "status": "FAIL"
   },
@@ -1092,6 +1092,66 @@
     "status": "PASS"
   },
   "Origin parsing: <west://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <android://x:0/a> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <drivefs://x:0/a> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <chromeos-steam://x:0/a> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <steam://x:0/a> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <materialized-view://x:0/a> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <android-app://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <chrome-distiller://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <chrome-extension://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <chrome-native://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <chrome-resource://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <chrome-search://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <fuchsia-dir://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <isolated-app://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:\\\\opaque> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:\\\\opaque/path> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:\\\\opaque\\path> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:\\/opaque> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:/\\path> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special://host/a\\b> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> without base": {
     "status": "PASS"
   }
 }

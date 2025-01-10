@@ -1,10 +1,12 @@
-import { printVersion } from "./printVersion.js";
+import { basename } from 'node:path';
+import { argv } from 'node:process';
+import { printVersion } from './printVersion.js';
 
 export async function printHelp() {
   await printVersion();
   console.log(`
 USAGE:
-    js-compute-runtime [FLAGS] [OPTIONS] [ARGS]
+    ${basename(argv[1])} [FLAGS] [OPTIONS] [ARGS]
 
 FLAGS:
     -h, --help                                              Prints help information
@@ -12,7 +14,11 @@ FLAGS:
 
 OPTIONS:
     --engine-wasm <engine-wasm>                             The JS engine Wasm file path
+    --module-mode                            [experimental] Run all sources as native modules,
+                                                            with full error stack support.
+    --enable-aot                                            Enable AOT compilation for performance
     --enable-experimental-high-resolution-time-methods      Enable experimental high-resolution fastly.now() method
+    --enable-experimental-top-level-await                   Enable experimental top level await
 
 ARGS:
     <input>     The input JS script's file path [default: bin/index.js]

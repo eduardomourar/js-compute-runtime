@@ -9,7 +9,7 @@ name = "js-test-app"
 service_id = ""
 
 [scripts]
-  build = "node ../../../../js-compute-runtime-cli.js --enable-pbl --enable-experimental-high-resolution-time-methods src/index.js"
+  build = "node ../../../../js-compute-runtime-cli.js --enable-experimental-high-resolution-time-methods src/index.js"
 
 [local_server]
 
@@ -26,6 +26,10 @@ service_id = ""
     [local_server.backends.httpbin]
       url = "https://httpbin.org"
       override_host = "httpbin.org"
+
+    [local_server.backends.httpme]
+      url = "https://http-me.glitch.me"
+      override_host = "http-me.glitch.me"
 
   [local_server.config_stores]
     [local_server.config_stores.testconfig]
@@ -89,6 +93,10 @@ service_id = ""
       key = "placeholder"
       data = 'placholder'
 
+    [[local_server.kv_stores.example-test-kv-store-sm]]
+      key = "placeholder"
+      data = 'placholder'
+
   [local_server.secret_stores]
     [[local_server.secret_stores.example-test-secret-store]]
       key = "first"
@@ -97,12 +105,30 @@ service_id = ""
       key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       data = "This is some secret data"
 
+  [local_server.device_detection]
+    format = "inline-toml"
+
+    [local_server.device_detection.user_agents]
+    [local_server.device_detection.user_agents."Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0 FBAN/FBIOS;FBAV/8.0.0.28.18;FBBV/1665515;FBDV/iPhone4,1;FBMD/iPhone;FBSN/iPhone OS;FBSV/7.0.4;FBSS/2; FBCR/Telekom.de;FBID/phone;FBLC/de_DE;FBOP/5"]
+    user_agent = {}
+    os = {}
+    device = {name = "iPhone", brand = "Apple", model = "iPhone4,1", hwtype = "Mobile Phone", is_ereader = false, is_gameconsole = false, is_mediaplayer = false, is_mobile = true, is_smarttv = false, is_tablet = false, is_tvplayer = false, is_desktop = false, is_touchscreen = true }
+
+    [local_server.device_detection.user_agents."ghosts-app/1.0.2.1 (ASUSTeK COMPUTER INC.; X550CC; Windows 8 (X86); en)"]
+    user_agent = {}
+    os = {}
+    device = {name = "Asus TeK", brand = "Asus", model = "TeK", is_desktop = false }
+
 
 [setup]
   [setup.backends]
 
     [setup.backends.httpbin]
       address = "httpbin.org"
+      port = 443
+
+    [setup.backends.httpme]
+      address = "http-me.glitch.me"
       port = 443
 
     [setup.backends.TheOrigin]

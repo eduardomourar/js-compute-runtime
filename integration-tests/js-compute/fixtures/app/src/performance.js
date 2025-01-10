@@ -1,198 +1,274 @@
 /* eslint-env serviceworker */
-import { routes } from "./routes.js";
-import { pass, assert, assertThrows } from "./assertions.js";
+import { routes } from './routes.js';
+import { assert, assertThrows } from './assertions.js';
 
-let error;
-routes.set("/Performance/interface", () => {
-    let actual = Reflect.ownKeys(Performance)
-    let expected = ["prototype","length","name"]
-    error = assert(actual, expected, `Reflect.ownKeys(Performance)`)
-    if (error) { return error }
+routes.set('/Performance/interface', () => {
+  let actual = Reflect.ownKeys(Performance);
+  let expected = ['prototype', 'length', 'name'];
+  assert(actual, expected, `Reflect.ownKeys(Performance)`);
 
-    // Check the prototype descriptors are correct
-    {
-        actual = Reflect.getOwnPropertyDescriptor(Performance, 'prototype')
-        expected = {
-            "value": Performance.prototype,
-            "writable": false,
-            "enumerable": false,
-            "configurable": false
-        }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance, 'prototype')`)
-        if (error) { return error }
-    }
+  // Check the prototype descriptors are correct
+  {
+    actual = Reflect.getOwnPropertyDescriptor(Performance, 'prototype');
+    expected = {
+      value: Performance.prototype,
+      writable: false,
+      enumerable: false,
+      configurable: false,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance, 'prototype')`,
+    );
+  }
 
-    // Check the constructor function's defined parameter length is correct
-    {
-        actual = Reflect.getOwnPropertyDescriptor(Performance, 'length')
-        expected = {
-            "value": 0,
-            "writable": false,
-            "enumerable": false,
-            "configurable": true
-        }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance, 'length')`)
-        if (error) { return error }
-    }
+  // Check the constructor function's defined parameter length is correct
+  {
+    actual = Reflect.getOwnPropertyDescriptor(Performance, 'length');
+    expected = {
+      value: 0,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance, 'length')`,
+    );
+  }
 
-    // Check the constructor function's name is correct
-    {
-        actual = Reflect.getOwnPropertyDescriptor(Performance, 'name')
-        expected = {
-            "value": "Performance",
-            "writable": false,
-            "enumerable": false,
-            "configurable": true
-        }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance, 'name')`)
-        if (error) { return error }
-    }
+  // Check the constructor function's name is correct
+  {
+    actual = Reflect.getOwnPropertyDescriptor(Performance, 'name');
+    expected = {
+      value: 'Performance',
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance, 'name')`,
+    );
+  }
 
-    // Check the prototype has the correct keys
-    {
-        actual = Reflect.ownKeys(Performance.prototype)
-        expected = ["constructor","timeOrigin","now", Symbol.toStringTag]
-        error = assert(actual, expected, `Reflect.ownKeys(Performance.prototype)`)
-        if (error) { return error }
-    }
+  // Check the prototype has the correct keys
+  {
+    actual = Reflect.ownKeys(Performance.prototype);
+    expected = ['constructor', 'timeOrigin', 'now', Symbol.toStringTag];
+    assert(actual, expected, `Reflect.ownKeys(Performance.prototype)`);
+  }
 
-    // Check the constructor on the prototype is correct
-    {
-        actual = Reflect.getOwnPropertyDescriptor(Performance.prototype, 'constructor')
-        expected = { "writable": true, "enumerable": false, "configurable": true, value: Performance.prototype.constructor }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance.prototype, 'constructor')`)
-        if (error) { return error }
+  // Check the constructor on the prototype is correct
+  {
+    actual = Reflect.getOwnPropertyDescriptor(
+      Performance.prototype,
+      'constructor',
+    );
+    expected = {
+      writable: true,
+      enumerable: false,
+      configurable: true,
+      value: Performance.prototype.constructor,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance.prototype, 'constructor')`,
+    );
 
-        error = assert(typeof Performance.prototype.constructor, 'function', `typeof Performance.prototype.constructor`)
-        if (error) { return error }
+    assert(
+      typeof Performance.prototype.constructor,
+      'function',
+      `typeof Performance.prototype.constructor`,
+    );
 
-        actual = Reflect.getOwnPropertyDescriptor(Performance.prototype.constructor, 'length')
-        expected = {
-            "value": 0,
-            "writable": false,
-            "enumerable": false,
-            "configurable": true
-        }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance.prototype.constructor, 'length')`)
-        if (error) { return error }
+    actual = Reflect.getOwnPropertyDescriptor(
+      Performance.prototype.constructor,
+      'length',
+    );
+    expected = {
+      value: 0,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance.prototype.constructor, 'length')`,
+    );
 
-        actual = Reflect.getOwnPropertyDescriptor(Performance.prototype.constructor, 'name')
-        expected = {
-            "value": "Performance",
-            "writable": false,
-            "enumerable": false,
-            "configurable": true
-        }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance.prototype.constructor, 'name')`)
-        if (error) { return error }
-    }
+    actual = Reflect.getOwnPropertyDescriptor(
+      Performance.prototype.constructor,
+      'name',
+    );
+    expected = {
+      value: 'Performance',
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance.prototype.constructor, 'name')`,
+    );
+  }
 
-    // Check the Symbol.toStringTag on the prototype is correct
-    {
-        actual = Reflect.getOwnPropertyDescriptor(Performance.prototype, Symbol.toStringTag)
-        expected = {"value":"performance","writable":false,"enumerable":false,"configurable":true}
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance.prototype, [Symbol.toStringTag])`)
-        if (error) { return error }
+  // Check the Symbol.toStringTag on the prototype is correct
+  {
+    actual = Reflect.getOwnPropertyDescriptor(
+      Performance.prototype,
+      Symbol.toStringTag,
+    );
+    expected = {
+      value: 'performance',
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance.prototype, [Symbol.toStringTag])`,
+    );
 
-        error = assert(typeof Performance.prototype[Symbol.toStringTag], 'string', `typeof Performance.prototype[Symbol.toStringTag]`)
-        if (error) { return error }
-    }
+    assert(
+      typeof Performance.prototype[Symbol.toStringTag],
+      'string',
+      `typeof Performance.prototype[Symbol.toStringTag]`,
+    );
+  }
 
+  // Check the timeOrigin property is correct
+  {
+    const descriptors = Reflect.getOwnPropertyDescriptor(
+      Performance.prototype,
+      'timeOrigin',
+    );
+    expected = { enumerable: true, configurable: true };
+    assert(
+      descriptors.enumerable,
+      true,
+      `Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').enumerable`,
+    );
+    assert(
+      descriptors.configurable,
+      true,
+      `Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').configurable`,
+    );
+    assert(
+      descriptors.value,
+      undefined,
+      `Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').value`,
+    );
+    assert(
+      descriptors.set,
+      undefined,
+      `Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').set`,
+    );
+    assert(
+      typeof descriptors.get,
+      'function',
+      `typeof Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').get`,
+    );
 
-    // Check the timeOrigin property is correct
-    {
-        const descriptors = Reflect.getOwnPropertyDescriptor(Performance.prototype, 'timeOrigin')
-        expected = { "enumerable": true, "configurable": true }
-        error = assert(descriptors.enumerable, true, `Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').enumerable`)
-        error = assert(descriptors.configurable, true, `Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').configurable`)
-        error = assert(descriptors.value, undefined, `Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').value`)
-        error = assert(descriptors.set, undefined, `Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').set`)
-        error = assert(typeof descriptors.get, 'function', `typeof Reflect.getOwnPropertyDescriptor(Performance, 'timeOrigin').get`)
-        if (error) { return error }
+    assert(
+      typeof Performance.prototype.timeOrigin,
+      'number',
+      `typeof Performance.prototype.timeOrigin`,
+    );
+  }
 
-        error = assert(typeof Performance.prototype.timeOrigin, 'number', `typeof Performance.prototype.timeOrigin`)
-        if (error) { return error }
-    }
+  // Check the now property is correct
+  {
+    actual = Reflect.getOwnPropertyDescriptor(Performance.prototype, 'now');
+    expected = {
+      writable: true,
+      enumerable: true,
+      configurable: true,
+      value: Performance.prototype.now,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance, 'now')`,
+    );
 
-    // Check the now property is correct
-    {
-        actual = Reflect.getOwnPropertyDescriptor(Performance.prototype, 'now')
-        expected = { "writable": true, "enumerable": true, "configurable": true, value: Performance.prototype.now }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance, 'now')`)
-        if (error) { return error }
+    assert(
+      typeof Performance.prototype.now,
+      'function',
+      `typeof Performance.prototype.now`,
+    );
 
-        error = assert(typeof Performance.prototype.now, 'function', `typeof Performance.prototype.now`)
-        if (error) { return error }
+    actual = Reflect.getOwnPropertyDescriptor(
+      Performance.prototype.now,
+      'length',
+    );
+    expected = {
+      value: 0,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance.prototype.now, 'length')`,
+    );
 
-        actual = Reflect.getOwnPropertyDescriptor(Performance.prototype.now, 'length')
-        expected = {
-            "value": 0,
-            "writable": false,
-            "enumerable": false,
-            "configurable": true
-        }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance.prototype.now, 'length')`)
-        if (error) { return error }
-
-        actual = Reflect.getOwnPropertyDescriptor(Performance.prototype.now, 'name')
-        expected = {
-            "value": "now",
-            "writable": false,
-            "enumerable": false,
-            "configurable": true
-        }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Performance.prototype.now, 'name')`)
-        if (error) { return error }
-    }
-
-    return pass('ok')
+    actual = Reflect.getOwnPropertyDescriptor(
+      Performance.prototype.now,
+      'name',
+    );
+    expected = {
+      value: 'now',
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    };
+    assert(
+      actual,
+      expected,
+      `Reflect.getOwnPropertyDescriptor(Performance.prototype.now, 'name')`,
+    );
+  }
 });
 
-routes.set("/globalThis.performance", () => {
-    error = assert(globalThis.performance instanceof Performance, true, `globalThis.performance instanceof Performance`)
-    if (error) { return error }
-
-    return pass('ok')
+routes.set('/globalThis.performance', () => {
+  assert(
+    globalThis.performance instanceof Performance,
+    true,
+    `globalThis.performance instanceof Performance`,
+  );
 });
 
-routes.set("/globalThis.performance/now", () => {
-    error = assertThrows(() => new performance.now())
-    if (error) { return error }
+routes.set('/globalThis.performance/now', () => {
+  assertThrows(() => new performance.now());
 
-    error = assert(typeof performance.now(), 'number')
-    if (error) { return error }
+  assert(typeof performance.now(), 'number');
 
-    error = assert(performance.now() > 0, true)
-    if (error) { return error }
+  assert(performance.now() > 0, true);
 
-    error = assert(Number.isNaN(performance.now()), false)
-    if (error) { return error }
+  assert(Number.isNaN(performance.now()), false);
 
-    error = assert(Number.isFinite(performance.now()), true)
-    if (error) { return error }
+  assert(Number.isFinite(performance.now()), true);
 
-    error = assert(performance.now() < Date.now(), true)
-    if (error) { return error }
-
-    return pass('ok')
+  assert(performance.now() < Date.now(), true);
 });
 
-routes.set("/globalThis.performance/timeOrigin", () => {
-    error = assert(typeof performance.timeOrigin, 'number')
-    if (error) { return error }
+routes.set('/globalThis.performance/timeOrigin', () => {
+  assert(typeof performance.timeOrigin, 'number');
 
-    error = assert(performance.timeOrigin > 0, true)
-    if (error) { return error }
+  assert(performance.timeOrigin > 0, true);
 
-    error = assert(Number.isNaN(performance.timeOrigin), false)
-    if (error) { return error }
+  assert(Number.isNaN(performance.timeOrigin), false);
 
-    error = assert(Number.isFinite(performance.timeOrigin), true)
-    if (error) { return error }
+  assert(Number.isFinite(performance.timeOrigin), true);
 
-
-    error = assert(performance.timeOrigin < Date.now(), true)
-    if (error) { return error }
-
-    return pass('ok')
+  assert(performance.timeOrigin < Date.now(), true);
 });

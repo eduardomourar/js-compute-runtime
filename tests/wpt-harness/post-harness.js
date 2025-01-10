@@ -1,9 +1,8 @@
 /* eslint-env serviceworker */
 /* global add_completion_callback setup done */
-import { enableDebugLogging, setDefaultBackend, setBaseURL } from "fastly:experimental";
+import { enableDebugLogging, setBaseURL } from "fastly:experimental";
 
 enableDebugLogging(true);
-setDefaultBackend("wpt");
 
 let completionPromise = new Promise((resolve) => {
     add_completion_callback(function(tests, harness_status, asserts) {
@@ -52,7 +51,7 @@ async function handleRequest(event) {
 
 function evalAllScripts(wpt_test_scripts) {
   for (let wpt_test_script of wpt_test_scripts) {
-    eval(wpt_test_script);
+    (0, eval)(wpt_test_script);
   }
 }
 
@@ -70,10 +69,10 @@ async function loadMetaScript(path) {
   let lines = metaSource.split("\n");
   lines = lines.map(line => {
     if (line.indexOf("const ") == 0) {
-      return "var " + line.substr(6);
+      return `var ${line.slice(6)}`;
     }
     if (line.indexOf("let ") == 0) {
-      return "var " + line.substr(4);
+      return `var ${line.slice(4)}`;
     }
     return line;
   });

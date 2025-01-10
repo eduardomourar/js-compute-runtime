@@ -1,7 +1,7 @@
 /* eslint-env serviceworker */
-import { routes } from "./routes.js";
+import { routes } from './routes.js';
 
-routes.set("/tee", async function (event) {
+routes.set('/tee', async function (event) {
   const req = event.request;
   // eslint-disable-next-line no-unused-vars
   let [body1, _body2] = req.body.tee();
@@ -17,33 +17,30 @@ routes.set("/tee", async function (event) {
       body: body1,
       headers: req.headers,
       method: req.method,
-      backend: "httpbin",
-    })
+      backend: 'httpbin',
+    }),
   );
-  let body = await res.json()
+  let body = await res.json();
 
   return new Response(body.data);
 });
 
-
-routes.set("/tee/error", async function (event) {
+routes.set('/tee/error', async function (event) {
   const req = event.request;
-  console.log(req.method);
   let res = fetch('/post', {
-    method: "POST",
+    method: 'POST',
     body: new ReadableStream({
       start: (controller) => {
-        controller.enqueue("Test");
+        controller.enqueue('Test');
         controller.close();
       },
     }),
-    backend: "httpbin",
+    backend: 'httpbin',
   });
 
   return res
     .then(() => new Response("Error wasn't raised"))
     .catch((err) => {
-      console.log(err.toString());
       return new Response(err.toString());
     });
 });

@@ -3,22 +3,19 @@
 /integration-tests/**/fixtures/**/fastly.toml
 /integration-tests/**/fixtures/**/*.wasm
 
-/compute-js/
+/runtime/fastly/build-*/
+
 node_modules/
 .DS_Store
-/dist
-# *.o
-# *.d
-/rusturl/
 # compiler_flags
-/js-compute-runtime.wasm
-/js-compute-runtime-component.wasm
-/runtime/js-compute-runtime/obj
+/fastly-weval.wasm
+/fastly.debug.wasm
+/fastly.wasm
+/fastly-ics.wevalcache
 tests/wpt-harness/wpt-test-runner.js
 wpt-runtime.wasm
 docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz
-runtime/js-compute-runtime/fastly-world/fastly_world_component_type.o
 
-*.a
 yarn-error.log
+.vscode

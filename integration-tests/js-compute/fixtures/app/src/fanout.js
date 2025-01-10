@@ -1,38 +1,35 @@
-import { pass, assert, assertDoesNotThrow, assertThrows } from "./assertions.js";
-import { routes } from "./routes.js";
-import { createFanoutHandoff } from "fastly:fanout";
+import { assert, assertDoesNotThrow, assertThrows } from './assertions.js';
+import { routes } from './routes.js';
+import { createFanoutHandoff } from 'fastly:fanout';
 
-let error;
-routes.set("/createFanoutHandoff", () => {
-  error = assert(typeof createFanoutHandoff, "function", "typeof createFanoutHandoff");
-  if (error) { return error; }
+routes.set('/createFanoutHandoff', () => {
+  assert(typeof createFanoutHandoff, 'function', 'typeof createFanoutHandoff');
 
-  error = assert(createFanoutHandoff.name, "createFanoutHandoff", "createFanoutHandoff.name");
-  if (error) { return error; }
+  assert(
+    createFanoutHandoff.name,
+    'createFanoutHandoff',
+    'createFanoutHandoff.name',
+  );
 
-  error = assert(createFanoutHandoff.length, 2, "createFanoutHandoff.length");
-  if (error) { return error; }
+  assert(createFanoutHandoff.length, 2, 'createFanoutHandoff.length');
 
-  error = assertDoesNotThrow(() => createFanoutHandoff(new Request('.'), 'hello'));
-  if (error) { return error; }
+  assertDoesNotThrow(() => createFanoutHandoff(new Request('.'), 'hello'));
 
-  error = assertThrows(() => createFanoutHandoff());
-  if (error) { return error; }
+  assertThrows(() => createFanoutHandoff());
 
-  error = assertThrows(() => createFanoutHandoff(1, ''));
-  if (error) { return error; }
+  assertThrows(() => createFanoutHandoff(1, ''));
 
   let result = createFanoutHandoff(new Request('.'), 'hello');
-  error = assert(result instanceof Response, true, 'result instanceof Response');
-  if (error) { return error; }
+  assert(result instanceof Response, true, 'result instanceof Response');
 
-  error = assertThrows(() => new createFanoutHandoff(new Request('.'), 'hello'), TypeError, `createFanoutHandoff is not a constructor`)
-  if (error) { return error }
+  assertThrows(
+    () => new createFanoutHandoff(new Request('.'), 'hello'),
+    TypeError,
+  );
 
-  error = assertDoesNotThrow(() => {
-    createFanoutHandoff.call(undefined, new Request('.'), '1')
-  })
-  if (error) { return error }
+  assertDoesNotThrow(() => {
+    createFanoutHandoff.call(undefined, new Request('.'), '1');
+  });
 
   // https://tc39.es/ecma262/#sec-tostring
   let sentinel;
@@ -41,30 +38,33 @@ routes.set("/createFanoutHandoff", () => {
     const key = {
       toString() {
         throw sentinel;
-      }
-    }
-    createFanoutHandoff(new Request('.'), key)
-  }
-  error = assertThrows(test)
-  if (error) { return error }
+      },
+    };
+    createFanoutHandoff(new Request('.'), key);
+  };
+  assertThrows(test);
   try {
-    test()
+    test();
   } catch (thrownError) {
-    let error = assert(thrownError, sentinel, 'thrownError === sentinel')
-    if (error) { return error }
+    assert(thrownError, sentinel, 'thrownError === sentinel');
   }
-  error = assertThrows(() => {
-    createFanoutHandoff(new Request('.'), Symbol())
-  }, TypeError, `can't convert symbol to string`)
-  if (error) { return error }
+  assertThrows(
+    () => {
+      createFanoutHandoff(new Request('.'), Symbol());
+    },
+    TypeError,
+    `can't convert symbol to string`,
+  );
 
-  error = assertThrows(() => createFanoutHandoff(new Request('.')), TypeError, `createFanoutHandoff: At least 2 arguments required, but only 1 passed`)
-  if (error) { return error }
+  assertThrows(
+    () => createFanoutHandoff(new Request('.')),
+    TypeError,
+    `createFanoutHandoff: At least 2 arguments required, but only 1 passed`,
+  );
 
-  error = assertThrows(() => createFanoutHandoff(new Request('.'), ''), Error, `createFanoutHandoff: Backend parameter can not be an empty string`)
-  if (error) { return error }
-
-
-  return pass();
+  assertThrows(
+    () => createFanoutHandoff(new Request('.'), ''),
+    Error,
+    `createFanoutHandoff: Backend parameter can not be an empty string`,
+  );
 });
-

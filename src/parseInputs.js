@@ -1,60 +1,79 @@
-import { fileURLToPath } from "node:url";
-import { dirname, join, isAbsolute } from "node:path";
-import { unknownArgument } from "./unknownArgument.js";
-import { tooManyEngines } from "./tooManyEngines.js";
+import { fileURLToPath } from 'node:url';
+import { dirname, join, isAbsolute } from 'node:path';
+import { unknownArgument } from './unknownArgument.js';
+import { tooManyEngines } from './tooManyEngines.js';
 
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
-  let component = false;
-  let adapter;
   let enableExperimentalHighResolutionTimeMethods = false;
-  let enablePBL = false;
+  let enableAOT = false;
   let customEngineSet = false;
-  let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
+  let moduleMode = false;
+  let bundle = true;
+  let wasmEngine = join(__dirname, '../fastly.wasm');
+  let aotCache = join(__dirname, '../fastly-ics.wevalcache');
   let customInputSet = false;
-  let input = join(process.cwd(), "bin/index.js");
+  let input = join(process.cwd(), 'bin/index.js');
   let customOutputSet = false;
-  let output = join(process.cwd(), "bin/main.wasm");
+  let output = join(process.cwd(), 'bin/main.wasm');
   let cliInput;
-
-  let useComponent = () => {
-    component = true;
-    wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
-  };
 
   // eslint-disable-next-line no-cond-assign
   loop: while ((cliInput = cliInputs.shift())) {
     switch (cliInput) {
-      case "--": {
+      case '--': {
         break loop;
       }
-      case "--enable-experimental-high-resolution-time-methods": {
+      case '--enable-experimental-high-resolution-time-methods': {
         enableExperimentalHighResolutionTimeMethods = true;
         break;
       }
-      case "--enable-pbl": {
-        enablePBL = true;
+      case '--module-mode': {
+        moduleMode = true;
+        bundle = false;
         break;
       }
-      case "-V":
-      case "--version": {
+      case '--enable-experimental-top-level-await': {
+        moduleMode = true;
+        bundle = true;
+        break;
+      }
+      case '--enable-aot': {
+        enableAOT = true;
+        break;
+      }
+      case '--enable-experimental-aot': {
+        console.error(
+          'Warning: --enable-experimental-aot flag is now --enable-aot. The old flag continues\n' +
+            'to work for now, but please update your build invocation!',
+        );
+        enableAOT = true;
+        break;
+      }
+      case '-V':
+      case '--version': {
         return { version: true };
       }
-      case "-h":
-      case "--help": {
+      case '-h':
+      case '--help': {
         return { help: true };
       }
-      case "--component": {
-        useComponent();
+      case '--starlingmonkey': {
         break;
       }
-      case "--component-adapter": {
-        useComponent();
-        adapter = cliInputs.shift();
+      case '--debug-build': {
+        wasmEngine = join(__dirname, '../fastly.debug.wasm');
+        console.log('Building with the debug engine');
         break;
       }
-      case "--engine-wasm": {
+      case '--disable-starlingmonkey': {
+        console.error(
+          'The legacy js-compute-runtime.wasm engine requires an older version of the JS SDK',
+        );
+        process.exit(1);
+      }
+      case '--engine-wasm': {
         if (customEngineSet) {
           tooManyEngines();
         }
@@ -67,15 +86,23 @@ export async function parseInputs(cliInputs) {
         }
         break;
       }
+      case '--aot-cache': {
+        if (isAbsolute(value)) {
+          aotCache = value;
+        } else {
+          aotCache = join(process.cwd(), value);
+        }
+        break;
+      }
       default: {
         // The reason this is not another `case` and is an `if` using `startsWith`
         // is because previous versions of the CLI allowed an arbitrary amount of
         // = characters to be present. E.G. This is valid --engine-wasm====js.wasm
-        if (cliInput.startsWith("--engine-wasm=")) {
+        if (cliInput.startsWith('--engine-wasm=')) {
           if (customEngineSet) {
             tooManyEngines();
           }
-          const value = cliInput.replace(/--engine-wasm=+/, "");
+          const value = cliInput.replace(/--engine-wasm=+/, '');
           // This is used to detect if multiple --engine-wasm flags have been set
           // which is not supported.
           customEngineSet = true;
@@ -85,7 +112,7 @@ export async function parseInputs(cliInputs) {
             wasmEngine = join(process.cwd(), value);
           }
           break;
-        } else if (cliInput.startsWith("-")) {
+        } else if (cliInput.startsWith('-')) {
           unknownArgument(cliInput);
         } else {
           if (!customInputSet) {
@@ -109,5 +136,19 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, component, adapter, input, output, enableExperimentalHighResolutionTimeMethods, enablePBL };
+
+  if (!customEngineSet && enableAOT) {
+    wasmEngine = join(__dirname, '../fastly-weval.wasm');
+  }
+
+  return {
+    enableExperimentalHighResolutionTimeMethods,
+    moduleMode,
+    bundle,
+    enableAOT,
+    aotCache,
+    input,
+    output,
+    wasmEngine,
+  };
 }
