@@ -1,8 +1,8 @@
 /* eslint-env serviceworker */
-import { routes } from "./routes.js";
+import { routes } from './routes.js';
 
 {
-  routes.set("/request-upstream", async (event) => {
+  routes.set('/request-upstream', async (event) => {
     /**
      * @type {Request} request
      **/
@@ -15,9 +15,9 @@ import { routes } from "./routes.js";
       headers[name].push(value);
     }
     delete headers['user-agent'];
-    return new Response(JSON.stringify(headers), {headers: request.headers})
+    return new Response(JSON.stringify(headers), { headers: request.headers });
   });
-  routes.set("/request-init", async () => {
+  routes.set('/request-init', async () => {
     const requestHeaders = new Headers();
     requestHeaders.append('cats', 'aki');
     requestHeaders.append('cats', 'yuki');
@@ -31,8 +31,10 @@ import { routes } from "./routes.js";
     requestHeaders.append('numbers', '7');
     requestHeaders.append('numbers', '8');
     requestHeaders.append('numbers', '9');
-    let request = new Request("https://www.exmaple.com", {headers: requestHeaders});
-    
+    let request = new Request('https://www.exmaple.com', {
+      headers: requestHeaders,
+    });
+
     const headers = {};
     for (const [name, value] of request.headers.entries()) {
       if (!headers[name]) {
@@ -41,10 +43,10 @@ import { routes } from "./routes.js";
       headers[name].push(value);
     }
     delete headers['user-agent'];
-    return new Response(JSON.stringify(headers), {headers: request.headers})
+    return new Response(JSON.stringify(headers), { headers: request.headers });
   });
-  routes.set("/request-direct", async () => {
-    let request = new Request("https://www.exmaple.com");
+  routes.set('/request-direct', async () => {
+    let request = new Request('https://www.exmaple.com');
 
     request.headers.append('cats', 'aki');
     request.headers.append('cats', 'yuki');
@@ -66,6 +68,6 @@ import { routes } from "./routes.js";
       headers[name].push(value);
     }
     delete headers['user-agent'];
-    return new Response(JSON.stringify(headers), {headers: request.headers})
+    return new Response(JSON.stringify(headers), { headers: request.headers });
   });
 }
